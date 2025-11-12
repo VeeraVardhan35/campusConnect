@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Weekly Timetable - CampusConnect{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Weekly Timetable</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Time</th>
+                        {% for day in days %}
+                        <th>{{ day|title }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for time_slot in time_slots %}
+                    <tr>
+                        <td>{{ time_slot.start_time|time:"H:i" }} - {{ time_slot.end_time|time:"H:i" }}</td>
+                        {% for day in days %}
+                        <td>
+                            {% for class in classes %}
+                                {% if class.time_slot.day == day and class.time_slot.id == time_slot.id %}
+                                <div class="class-slot p-2 mb-2 bg-primary text-white rounded">
+                                    <strong>{{ class.course.code }}</strong><br>
+                                    {{ class.course.name }}<br>
+                                    <small>Prof. {{ class.professor.get_full_name }}</small><br>
+                                    <small>{{ class.classroom.room_number }}</small>
+                                    {% if class.batch %}
+                                    <br><small>Batch: {{ class.batch.name }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No time slots found in the system.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if not classes %}
+<div class="alert alert-info mt-3">
+    <h5>No Classes Found</h5>
+    <p class="mb-0">
+        {% if user.role == 'student' %}
+        No classes scheduled for your batch and branch.
+        {% elif user.role == 'professor' %}
+        No classes assigned to you.
+        {% else %}
+        No classes found in the system.
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+{% endblock %}

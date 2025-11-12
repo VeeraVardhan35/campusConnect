@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h1 class="h2 mb-1">👨‍🏫 Professor Dashboard</h1>
+                    <p class="mb-0">Welcome back, Prof. {{ user.get_full_name|default:user.username }}!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🚀 Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'free_slots' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                        📅 Book Classroom
+                    </a>
+                    <a href="{% url 'my_bookings' %}" class="btn btn-outline-primary w-100 mb-2">
+                        📋 My Bookings
+                    </a>
+                </div>
+            </div>
+
+            <!-- Today's Classes -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📚 Today's Classes</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_classes %}
+                        {% for class in upcoming_classes %}
+                        <div class="border-start border-info border-3 ps-3 mb-3">
+                            <h6 class="mb-1">{{ class.course.code }}</h6>
+                            <p class="mb-1 small">{{ class.course.name }}</p>
+                            <div class="small">
+                                <span class="badge bg-secondary">{{ class.time_slot.start_time|time:"H:i" }}</span>
+                                <span class="badge bg-light text-dark">{{ class.classroom.room_number }}</span>
+                                <span class="badge bg-warning text-dark">{{ class.batch }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No classes scheduled for today.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">⏰ Recent Booking Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Classroom</th>
+                                        <th>Course</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ booking.date }}</td>
+                                        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
+                                        <td>{{ booking.classroom.room_number }}</td>
+                                        <td>{{ booking.course_code }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if booking.status == 'approved' %}bg-success
+                                                {% elif booking.status == 'pending' %}bg-warning
+                                                {% elif booking.status == 'rejected' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ booking.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'my_bookings' %}" class="btn btn-outline-primary">View All Bookings</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <h5>No booking requests yet</h5>
+                            <p class="text-muted">Book your first classroom to get started!</p>
+                            <a href="{% url 'free_slots' %}" class="btn btn-primary">Book Classroom</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

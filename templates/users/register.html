@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">🎓 Register Account</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Information Alert -->
+                    <div class="alert alert-info">
+                        <h5>📋 Registration Information</h5>
+                        <ul class="mb-0">
+                            <li><strong>Students:</strong> Need to provide batch, branch, and section</li>
+                            <li><strong>Professors:</strong> Must use authorized email address ({{ professor_email_count }} emails in system)</li>
+                        </ul>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                                    {{ form.username }}
+                                    {% if form.username.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.username.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.email.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    {{ form.first_name }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    {{ form.last_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.role.id_for_label }}" class="form-label">Role</label>
+                                    {{ form.role }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student-specific fields (shown/hidden based on role) -->
+                        <div id="student-fields" style="display: none;">
+                            <div class="alert alert-warning">
+                                <h6>🎒 Student Information</h6>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.batch.id_for_label }}" class="form-label">Batch Year</label>
+                                        {{ form.batch }}
+                                        {% if form.batch.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.batch.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.branch.id_for_label }}" class="form-label">Branch</label>
+                                        {{ form.branch }}
+                                        {% if form.branch.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.branch.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                                        {{ form.section }}
+                                        {% if form.section.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.section.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professor information -->
+                        <div id="professor-info" style="display: none;">
+                            <div class="alert alert-success">
+                                <h6>👨‍🏫 Professor Registration</h6>
+                                <p class="mb-0">Your email must be in the authorized professor list. If you're having issues, contact administration.</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.password1.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.password2.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.querySelector('#id_role');
+    const studentFields = document.getElementById('student-fields');
+    const professorInfo = document.getElementById('professor-info');
+    
+    function toggleFields() {
+        const role = roleSelect.value;
+        
+        // Hide all
+        studentFields.style.display = 'none';
+        professorInfo.style.display = 'none';
+        
+        // Show based on role
+        if (role === 'student') {
+            studentFields.style.display = 'block';
+        } else if (role === 'professor') {
+            professorInfo.style.display = 'block';
+        }
+    }
+    
+    // Initial toggle
+    toggleFields();
+    
+    // Add event listener
+    roleSelect.addEventListener('change', toggleFields);
+});
+</script>
+{% endblock %}

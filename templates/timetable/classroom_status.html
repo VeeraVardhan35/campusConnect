@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+
+{% block title %}Classroom Status - CampusConnect{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Classroom Status</h1>
+        <p class="text-muted">Last updated: {{ current_time|time:"H:i" }}</p>
+    </div>
+</div>
+
+<!-- Quick Email Groups -->
+<div class="row mb-4">
+    <!-- Batch Email Groups -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Batch Email Groups</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% for group in batch_groups %}
+                    <button class="btn btn-outline-primary text-start email-group-btn" 
+                            onclick="openEmailModal('{{ group.name }}', '{{ group.email }}', 'batch')">
+                        <strong>{{ group.name }}</strong><br>
+                        <small class="text-muted">{{ group.email }}</small>
+                    </button>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <small>No batch groups available</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Email Groups -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Branch Email Groups</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="branchAccordion">
+                    {% for batch, branches in branch_groups_by_batch.items %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ batch }}">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ batch }}" 
+                                    aria-expanded="false" aria-controls="collapse{{ batch }}">
+                                Batch {{ batch }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ batch }}" class="accordion-collapse collapse" 
+                             aria-labelledby="heading{{ batch }}" data-bs-parent="#branchAccordion">
+                            <div class="accordion-body p-2">
+                                <div class="d-grid gap-2">
+                                    {% for group in branches %}
+                                    <button class="btn btn-outline-success btn-sm text-start email-group-btn" 
+                                            onclick="openEmailModal('{{ group.name }}', '{{ group.email }}', 'branch')">
+                                        <strong>{{ group.branch|upper }}</strong><br>
+                                        <small class="text-muted">{{ group.email }}</small>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <small>No branch groups available</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Legend -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <span class="badge bg-warning me-2">🟡</span>
+                        <small>Ongoing Class</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-success me-2">🟢</span>
+                        <small>Free (Scheduled Later)</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-danger me-2">🔴</span>
+                        <small>Completed/No Classes</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-info me-2">🔵</span>
+                        <small>Completely Free</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Classroom Grid -->
+<div class="row">
+    {% for data in classroom_data %}
+    <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+        <!-- In the classroom cards section, update the data attributes and modal content -->
+            <div class="card classroom-card 
+                {% if data.status == 'ongoing' %}border-warning
+                {% elif data.status == 'scheduled' %}border-success
+                {% elif data.status == 'completed' %}border-danger
+                {% else %}border-info{% endif %}"
+                style="cursor: pointer; transition: transform 0.2s;"
+                role="button"
+                tabindex="0"
+                onclick="showClassDetails(this)"
+                data-room-number="{{ data.classroom.room_number }}"
+                data-building="{{ data.classroom.building }}"
+                data-capacity="{{ data.classroom.capacity }}"
+                data-status="{{ data.status }}"
+                data-course-name="{% if data.current_class and data.current_class.course %}{{ data.current_class.course.name }}{% endif %}"
+                data-course-code="{% if data.current_class and data.current_class.course %}{{ data.current_class.course.code }}{% endif %}"
+                data-professor="{% if data.current_class and data.current_class.professor %}{{ data.current_class.professor.get_full_name }}{% endif %}"
+                data-batch="{% if data.current_class and data.current_class.batch %}{{ data.current_class.batch.name }}{% endif %}"
+                data-start-time="{% if data.current_class and data.current_class.time_slot %}{{ data.current_class.time_slot.start_time|time:'H:i' }}{% endif %}"
+                data-end-time="{% if data.current_class and data.current_class.time_slot %}{{ data.current_class.time_slot.end_time|time:'H:i' }}{% endif %}"
+                data-next-course="{% if data.next_class and data.next_class.course %}{{ data.next_class.course.name }} ({{ data.next_class.course.code }}){% endif %}"
+                data-next-professor="{% if data.next_class and data.next_class.professor %}{{ data.next_class.professor.get_full_name }}{% endif %}"
+                data-next-batch="{% if data.next_class and data.next_class.batch %}{{ data.next_class.batch.name }}{% endif %}"
+                data-next-start-time="{% if data.next_class and data.next_class.time_slot %}{{ data.next_class.time_slot.start_time|time:'H:i' }}{% endif %}"
+                data-next-end-time="{% if data.next_class and data.next_class.time_slot %}{{ data.next_class.time_slot.end_time|time:'H:i' }}{% endif %}">
+                
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ data.classroom.room_number }}</h5>
+                    <p class="card-text mb-1">
+                        <small class="text-muted">{{ data.classroom.building }}</small>
+                    </p>
+                    <p class="card-text mb-1">
+                        <small>Capacity: {{ data.classroom.capacity }}</small>
+                    </p>
+                    
+                    <!-- Status Badge -->
+                    {% if data.status == 'ongoing' %}
+                        <span class="badge bg-warning">Ongoing Class</span>
+                    {% elif data.status == 'scheduled' %}
+                        <span class="badge bg-success">Free - Scheduled</span>
+                    {% elif data.status == 'completed' %}
+                        <span class="badge bg-danger">No More Classes</span>
+                    {% else %}
+                        <span class="badge bg-info">Completely Free</span>
+                    {% endif %}
+                    
+                    <!-- Current/Next Class Info -->
+                    {% if data.current_class and data.current_class.course and data.current_class.time_slot %}
+                    <div class="mt-2">
+                        <small class="d-block">
+                            <strong>{{ data.current_class.course.code|default:data.current_class.course.name }}</strong>
+                        </small>
+                        <small class="d-block text-muted">
+                            {{ data.current_class.time_slot.start_time|time:"H:i" }} - 
+                            {{ data.current_class.time_slot.end_time|time:"H:i" }}
+                        </small>
+                        {% if data.current_class.professor %}
+                        <small class="d-block">
+                            Prof: {{ data.current_class.professor.get_full_name }}
+                        </small>
+                        {% endif %}
+                        {% if data.current_class.batch and data.current_class.batch.name %}
+                        <small class="d-block">
+                            Batch: {{ data.current_class.batch.name }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            No classrooms found in the system.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Classroom Details Modal -->
+<div class="modal fade" id="classroomModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="classroomModalLabel">Classroom Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="classroomModalBody">
+                <!-- Content will be loaded via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">Send Group Email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="emailForm">
+                    <div class="mb-3">
+                        <label for="recipientGroup" class="form-label">Recipient Group</label>
+                        <input type="text" class="form-control" id="recipientGroup" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="recipientEmail" class="form-label">Group Email Address</label>
+                        <input type="email" class="form-control" id="recipientEmail" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="emailSubject" placeholder="Enter email subject">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="emailMessage" rows="5" placeholder="Enter your message"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="sendGroupEmail()">Open Email Client</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Function to show classroom details
+function showClassDetails(element) {
+    const roomNumber = element.getAttribute('data-room-number');
+    const building = element.getAttribute('data-building');
+    const capacity = element.getAttribute('data-capacity');
+    const status = element.getAttribute('data-status');
+    const courseName = element.getAttribute('data-course-name');
+    const professor = element.getAttribute('data-professor');
+    const batch = element.getAttribute('data-batch');
+    const startTime = element.getAttribute('data-start-time');
+    const endTime = element.getAttribute('data-end-time');
+    
+    let statusText = '';
+    let statusClass = '';
+    
+    if (status === 'ongoing') {
+        statusText = 'Ongoing Class';
+        statusClass = 'warning';
+    } else if (status === 'scheduled') {
+        statusText = 'Free - Scheduled Later';
+        statusClass = 'success';
+    } else if (status === 'completed') {
+        statusText = 'No More Classes Today';
+        statusClass = 'danger';
+    } else {
+        statusText = 'Completely Free';
+        statusClass = 'info';
+    }
+    
+    let classInfo = '';
+    if (courseName && courseName !== 'null' && courseName !== '') {
+        classInfo = `
+            <hr>
+            <h6>Current/Next Class:</h6>
+            <p><strong>Course:</strong> ${courseName}</p>
+            <p><strong>Professor:</strong> ${professor}</p>
+            ${batch && batch !== 'null' && batch !== '' ? `<p><strong>Batch:</strong> ${batch}</p>` : ''}
+            <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
+        `;
+    }
+    
+    const modalBody = `
+        <div class="classroom-details">
+            <h4>${building} - ${roomNumber}</h4>
+            <p><strong>Capacity:</strong> ${capacity} students</p>
+            <span class="badge bg-${statusClass}">${statusText}</span>
+            ${classInfo}
+        </div>
+    `;
+    
+    document.getElementById('classroomModalBody').innerHTML = modalBody;
+    
+    const modal = new bootstrap.Modal(document.getElementById('classroomModal'));
+    modal.show();
+}
+
+// Function to open batch email
+function openBatchEmail(batch) {
+    const batchEmail = `btech${batch}@iiitdmj.ac.in`;
+    
+    document.getElementById('recipientGroup').value = `B.Tech ${batch} Batch`;
+    document.getElementById('recipientEmail').value = batchEmail;
+    document.getElementById('emailSubject').value = `Message for B.Tech ${batch} Batch`;
+    document.getElementById('emailMessage').value = `Hello B.Tech ${batch} students,\n\n`;
+    
+    const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+    emailModal.show();
+}
+
+/// Function to open email modal
+function openEmailModal(groupName, groupEmail, groupType) {
+    document.getElementById('recipientGroup').value = groupName;
+    document.getElementById('recipientEmail').value = groupEmail;
+    
+    // Set default subject based on group type
+    let defaultSubject = '';
+    if (groupType === 'batch') {
+        defaultSubject = `Message for ${groupName}`;
+    } else if (groupType === 'branch') {
+        defaultSubject = `Message for ${groupName}`;
+    }
+    document.getElementById('emailSubject').value = defaultSubject;
+    
+    // Set default message
+    let defaultMessage = '';
+    if (groupType === 'batch') {
+        defaultMessage = `Hello ${groupName},\n\n`;
+    } else if (groupType === 'branch') {
+        defaultMessage = `Hello ${groupName} students,\n\n`;
+    }
+    document.getElementById('emailMessage').value = defaultMessage;
+    
+    const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+    emailModal.show();
+}
+
+// Function to send group email
+function sendGroupEmail() {
+    const recipientEmail = document.getElementById('recipientEmail').value;
+    const subject = document.getElementById('emailSubject').value;
+    const message = document.getElementById('emailMessage').value;
+    
+    if (!recipientEmail) {
+        alert('Please select a valid group email.');
+        return;
+    }
+    
+    // Create mailto link
+    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    
+    // Open default email client
+    window.location.href = mailtoLink;
+    
+    // Close the modal
+    const emailModal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+    emailModal.hide();
+}
+
+// Enhanced function to show classroom details
+function showClassDetails(element) {
+    const roomNumber = element.getAttribute('data-room-number');
+    const building = element.getAttribute('data-building');
+    const capacity = element.getAttribute('data-capacity');
+    const status = element.getAttribute('data-status');
+    const courseName = element.getAttribute('data-course-name');
+    const courseCode = element.getAttribute('data-course-code');
+    const professor = element.getAttribute('data-professor');
+    const batch = element.getAttribute('data-batch');
+    const startTime = element.getAttribute('data-start-time');
+    const endTime = element.getAttribute('data-end-time');
+    const nextCourse = element.getAttribute('data-next-course');
+    const nextProfessor = element.getAttribute('data-next-professor');
+    const nextBatch = element.getAttribute('data-next-batch');
+    const nextStartTime = element.getAttribute('data-next-start-time');
+    const nextEndTime = element.getAttribute('data-next-end-time');
+    
+    let statusText = '';
+    let statusClass = '';
+    
+    if (status === 'ongoing') {
+        statusText = 'Ongoing Class';
+        statusClass = 'warning';
+    } else if (status === 'scheduled') {
+        statusText = 'Free - Scheduled Later';
+        statusClass = 'success';
+    } else if (status === 'completed') {
+        statusText = 'No More Classes Today';
+        statusClass = 'danger';
+    } else {
+        statusText = 'Completely Free';
+        statusClass = 'info';
+    }
+    
+    let classInfo = '';
+    if (courseName && courseName !== 'null' && courseName !== '') {
+        classInfo = `
+            <hr>
+            <h6>Current/Next Class:</h6>
+            <p><strong>Course:</strong> ${courseCode ? courseCode + ' - ' : ''}${courseName}</p>
+            <p><strong>Professor:</strong> ${professor}</p>
+            ${batch && batch !== 'null' && batch !== '' ? `<p><strong>Batch:</strong> ${batch}</p>` : ''}
+            <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
+        `;
+        
+        // Show next class if available
+        if (nextCourse && nextCourse !== 'null' && nextCourse !== '') {
+            classInfo += `
+                <hr>
+                <h6>Next Class:</h6>
+                <p><strong>Course:</strong> ${nextCourse}</p>
+                ${nextProfessor && nextProfessor !== 'null' ? `<p><strong>Professor:</strong> ${nextProfessor}</p>` : ''}
+                ${nextBatch && nextBatch !== 'null' ? `<p><strong>Batch:</strong> ${nextBatch}</p>` : ''}
+                <p><strong>Time:</strong> ${nextStartTime} - ${nextEndTime}</p>
+            `;
+        }
+    } else {
+        classInfo = `<hr><p class="text-muted">No classes scheduled at the moment.</p>`;
+    }
+    
+    const modalBody = `
+        <div class="classroom-details">
+            <h4>${building} - ${roomNumber}</h4>
+            <p><strong>Capacity:</strong> ${capacity} students</p>
+            <span class="badge bg-${statusClass}">${statusText}</span>
+            ${classInfo}
+        </div>
+    `;
+    
+    document.getElementById('classroomModalBody').innerHTML = modalBody;
+    
+    const modal = new bootstrap.Modal(document.getElementById('classroomModal'));
+    modal.show();
+}
+
+// Auto-refresh page every 5 minutes
+setTimeout(() => {
+    window.location.reload();
+}, 300000);
+</script>
+
+<style>
+.classroom-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.classroom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.border-warning { border-color: #ffc107 !important; }
+.border-success { border-color: #198754 !important; }
+.border-danger { border-color: #dc3545 !important; }
+.border-info { border-color: #0dcaf0 !important; }
+
+.email-group-btn {
+    transition: all 0.2s;
+}
+
+.email-group-btn:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

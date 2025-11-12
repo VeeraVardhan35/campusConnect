@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - CampusConnect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Dashboard</h1>
+        <p class="lead">Welcome to CampusConnect, {{ user.get_full_name }}!</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Student Information Card -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Your Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ user.get_full_name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Role:</strong> {{ user.get_role_display }}</p>
+                
+                {% if user.role == 'student' and user.student_profile %}
+                    {% if user.student_profile.roll_number %}
+                        <p><strong>Roll Number:</strong> {{ user.student_profile.roll_number }}</p>
+                    {% endif %}
+                    {% if user.student_profile.batch %}
+                        <p><strong>Batch:</strong> {{ user.student_profile.batch }}</p>
+                    {% endif %}
+                    {% if user.student_profile.branch %}
+                        <p><strong>Branch:</strong> {{ user.student_profile.get_branch_display }}</p>
+                    {% endif %}
+                    {% if user.student_profile.section %}
+                        <p><strong>Section:</strong> {{ user.student_profile.section }}</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'classroom_status' %}" class="btn btn-outline-primary">
+                        View Classroom Status
+                    </a>
+                    <a href="{% url 'weekly_timetable' %}" class="btn btn-outline-secondary">
+                        View Weekly Timetable
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Next Classes Section - Only for Students -->
+{% if user.role == 'student' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    Your Today's Schedule
+                    {% if current_time %}
+                    <small class="text-muted">(Current time: {{ current_time|time:"H:i" }})</small>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if ongoing_class %}
+                <div class="alert alert-warning">
+                    <h6>📚 Currently Ongoing:</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ ongoing_class.course.code }} - {{ ongoing_class.course.name }}</strong><br>
+                            <small>
+                                Professor: {{ ongoing_class.professor.short_name}}<br>
+                                Room: {{ ongoing_class.classroom.room_number }}<br>
+                                Time: {{ ongoing_class.time_slot.start_time|time:"H:i" }} - {{ ongoing_class.time_slot.end_time|time:"H:i" }}
+                            </small>
+                        </div>
+                        <span class="badge bg-warning">Ongoing</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if next_classes %}
+                <h6>🕒 Upcoming Classes Today:</h6>
+                {% if tomorrow_classes %}
+                <div class="mt-4">
+                    <h6>📅 Tomorrow's First Classes:</h6>
+                    <div class="row">
+                        {% for class in tomorrow_classes %}
+                        <div class="col-md-4 mb-2">
+                            <div class="card border-info">
+                                <div class="card-body p-3">
+                                    <small>
+                                        <strong>{{ class.time_slot.start_time|time:"H:i" }}</strong><br>
+                                        {{ class.course.code }}<br>
+                                        <span class="text-muted">Prof. {{ class.professor.short_name }}</span><br>
+                                        <span class="text-muted">{{ class.classroom.room_number }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Course</th>
+                                <th>Professor</th>
+                                <th>Room</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in next_classes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ class.time_slot.start_time|time:"H:i" }} - {{ class.time_slot.end_time|time:"H:i" }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ class.course.code }}</strong><br>
+                                    <small class="text-muted">{{ class.course.name }}</small>
+                                </td>
+                                <td>
+                                    Prof. {{ class.professor.short_name|default:class.professor.last_name }}
+                                </td>
+                                <td>
+                                    {{ class.classroom.room_number }}
+                                </td>
+                                <td>
+                                    {% if forloop.first %}
+                                    <span class="badge bg-primary">Next</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Later</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <h6>🎉 No more classes today!</h6>
+                    <p class="text-muted mb-0">You're done for the day. Enjoy your free time!</p>
+                </div>
+                {% endif %}
+
+                {% if not ongoing_class and not next_classes %}
+                <div class="text-center py-4">
+                    <h6>📅 No classes scheduled for today</h6>
+                    <p class="text-muted mb-0">Check your weekly timetable for other days.</p>
+                    <a href="{% url 'weekly_timetable' %}" class="btn btn-outline-primary btn-sm mt-2">
+                        View Weekly Timetable
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- For Professors and Admins -->
+{% if user.role == 'professor' or user.role == 'admin' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Today's Schedule</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    {% if user.role == 'professor' %}
+                    View your teaching schedule in the weekly timetable.
+                    {% else %}
+                    Admin overview of all schedules.
+                    {% endif %}
+                </p>
+                <a href="{% url 'weekly_timetable' %}" class="btn btn-primary">
+                    View Timetable
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

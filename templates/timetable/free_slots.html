@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="card mb-3 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">📅 Classroom Availability</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5>{{ selected_date|date:"l, F j, Y" }}</h5>
+                <div>
+                    <a href="?date={{ prev_date.isoformat }}" class="btn btn-outline-primary">← Previous</a>
+                    <a href="?date={{ next_date.isoformat }}" class="btn btn-outline-primary">Next →</a>
+                    <input type="date" class="form-control d-inline-block w-auto ms-2"
+                           value="{{ selected_date.isoformat }}"
+                           onchange="window.location.href='?date=' + this.value">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Time</th>
+                        {% for room in classrooms %}
+                        <th>
+                            {{ room.room_number }}<br>
+                            <small class="text-muted">{{ room.building }}</small>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in time_slots %}
+                    {% with slot_key=slot|time:"H:i" %}
+                    <tr>
+                        <td class="fw-bold">{{ slot_key }}</td>
+                        {% for room in classrooms %}
+                            {% if availability.room.id.slot_key %}
+                                <td>
+                                    <a href="{% url 'book_classroom' room.id selected_date.isoformat slot_key %}"
+                                       class="btn btn-success btn-sm">Available</a>
+                                </td>
+                            {% else %}
+                                <td><span class="badge bg-secondary">Booked</span></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+yt

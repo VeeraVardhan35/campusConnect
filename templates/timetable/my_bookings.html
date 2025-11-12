@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <h2 class="h3 mb-0">📚 My Classroom Bookings</h2>
+                    <p class="mb-0">Here are all your classroom booking requests and their statuses.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if bookings %}
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Classroom</th>
+                        <th>Time</th>
+                        <th>Course</th>
+                        <th>Batch</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.date|date:"d M Y" }}</td>
+                        <td>
+                            <strong>{{ booking.classroom.room_number }}</strong><br>
+                            <small class="text-muted">{{ booking.classroom.building }}</small>
+                        </td>
+                        <td>{{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}</td>
+                        <td>{{ booking.course_code }} - {{ booking.course_name }}</td>
+                        <td>{% if booking.batch %}{{ booking.batch.name }}{% else %}-{% endif %}</td>
+                        <td>{{ booking.purpose }}</td>
+                        <td>
+                            {% if booking.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif booking.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif booking.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% elif booking.status == 'rejected' %}
+                                <span class="badge bg-secondary">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ booking.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if booking.status == 'pending' %}
+                            <form method="post" action="{% url 'cancel_booking' booking.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure you want to cancel this booking?');">
+                                    Cancel
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center mt-4">
+        <h5>No Bookings Found</h5>
+        <p class="mb-0">You haven’t made any classroom booking requests yet.</p>
+        <a href="{% url 'free_slots' %}" class="btn btn-primary mt-3">Book a Classroom</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

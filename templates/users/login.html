@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">🔐 Login</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Invalid email or password. Please try again.
+                        </div>
+                        {% endif %}
+
+                        <!-- CHANGE: Use email field instead of username -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" id="email" 
+                                   placeholder="Enter your registered email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" id="password" 
+                                   placeholder="Enter your password" required>
+                        </div>
+
+                        <!-- Forgot Password Link -->
+                        <div class="mb-3 text-end">
+                            <a href="{% url 'forgot_password' %}" class="text-decoration-none">
+                                Forgot Password?
+                            </a>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                        </div>
+                    </form>
+
+                    <!-- Staff Registration Section -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h5 class="text-center mb-3">👨‍🏫 Staff / Professor</h5>
+                        <p class="text-center mb-3">
+                            Are you a professor or staff member? Register using your authorized college email.
+                        </p>
+                        <div class="d-grid">
+                            <a href="{% url 'register' %}" class="btn btn-outline-primary">
+                                Register as Staff
+                            </a>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <small class="text-muted">
+                                Requires @iiitdmj.ac.in email or pre-approved address
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Student Registration Link -->
+                    <div class="text-center mt-3">
+                        <p class="mb-0">
+                            Student? <a href="{% url 'register' %}">Register here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

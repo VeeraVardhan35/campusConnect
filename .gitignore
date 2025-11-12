@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+# Virtual environment
+django_env/
+venv/
+
+# Environment variables
+.env
+
+# VSCode / PyCharm settings
+.vscode/
+.idea/
+
+# Static and media (if generated)
+staticfiles/
+media/
